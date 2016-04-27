@@ -8,9 +8,7 @@ import (
 
 	"github.com/brutella/hc/accessory"
 	"github.com/brutella/hc/hap"
-	"github.com/brutella/hc/service"
 
-	"fmt"
 	dlog "log"
 	"os"
 	"time"
@@ -25,21 +23,11 @@ var clientID uint8 = 0x10
 var serverID uint8 = 0x1
 var client *uvr.Client
 var bus *can.Bus
-
-// Reference to all in-/outlets
-var entities []*hkuvr.Entity
-
-// Reference to UVR1611 bridge
-var bridge *accessory.Accessory = hkuvr.NewUVR1611().Accessory
-var outlets []*hkuvr.Outlet
-var temperatureSensors []*hkuvr.TemperatureSensor
-
-var config = hap.Config{Pin: "00102003"}
 var transport hap.Transport
 
 func main() {
-	log.Info = false
-	log.Verbose = false
+	log.Info = true
+	log.Verbose = true
 	dlog.SetFlags(dlog.LstdFlags | dlog.Lshortfile)
 
 	var err error
@@ -53,24 +41,23 @@ func main() {
 	//    - float (temperature); e.g. 32.5
 	//    - string (true/false);, e.g. EIN
 	// 3. Read descriptions from CAN bus to update service names
-	// 4. Setup IP transport and publish accessories
+	// 4. Setup IP transport and publish bridge
 	// 5. Wait n seconds
 	// 6. Read values from CAN bus
 	// 7. Go to 5
 	go func() {
-
 		// 1.
 		if err := connect(); err != nil {
 			log.Fatal(err)
 		}
 
-		// 2.
-		entities = setupUVR(bridge)
+		var bridge *accessory.Accessory = hkuvr.NewUVR1611().Accessory
 
-		// 3.
-		updateEntityNames(entities)
+		// 2.
+		var objects = setupUVR(bridge)
 
 		// 4.
+		var config = hap.Config{Pin: "00102003"}
 		if t, err := hap.NewIPTransport(config, bridge); err != nil {
 			log.Fatal(err)
 		} else {
@@ -80,12 +67,11 @@ func main() {
 		go transport.Start()
 
 		for {
-			// Wait before updating values because `readEntities()` already updates the values
+			// 6.
+			updateObjectValues(objects)
+
 			// 5.
 			<-time.After(time.Second * 10)
-
-			// 6.
-			updateEntityValues(entities)
 		}
 	}()
 
@@ -106,84 +92,81 @@ func main() {
 	bus.ConnectAndPublish()
 }
 
-// Reads the values of all in-/outlets to determine the accessory type (Outlet or Thermometer)
-func setupUVR(acc *accessory.Accessory) []*hkuvr.Entity {
-	var entities = []*hkuvr.Entity{}
+func collectObjects() []hkuvr.Object {
+	objects := []hkuvr.Object{}
 
-	for i := uint8(1); i < MaxOutletsCount; i++ {
+	var desc interface{}
+	var val interface{}
+	var err error
+
+	for i := uint8(1); i <= MaxOutletsCount; i++ {
 		out := uvr.NewOutlet(i)
 
-		if value, err := client.Read(out.State); err == nil {
-			if svc := serviceForValue(value, fmt.Sprintf("Ausgang %d", i)); svc != nil {
-				acc.AddService(svc.(*service.Service))
-				entities = append(entities, hkuvr.NewEntity(svc, i))
-			}
+		if desc, err = client.Read(out.Description); err != nil {
+			dlog.Fatal(err)
+		}
+
+		str := desc.(string)
+
+		if desc == uvr.DescriptionUnused {
+			log.Println("[INFO] Ignore outlet", i)
+			continue
+		}
+
+		if val, err = client.Read(out.State); err != nil {
+			dlog.Fatal(err)
+		}
+
+		if obj, err := hkuvr.NewObject(val, str, i); err != nil {
+			dlog.Fatal(err)
 		} else {
-			dlog.Fatal(err, i)
+			objects = append(objects, obj)
 		}
 	}
 
-	for i := uint8(1); i < MaxInletsCount; i++ {
+	for i := uint8(1); i <= MaxInletsCount; i++ {
 		in := uvr.NewInlet(i)
 
-		if value, err := client.Read(in.Value); err == nil {
-			if svc := serviceForValue(value, fmt.Sprintf("Eingang %d", i)); svc != nil {
-				acc.AddService(svc.(*service.Service))
-				entities = append(entities, hkuvr.NewEntity(svc, i))
-			}
+		if desc, err = client.Read(in.Description); err != nil {
+			dlog.Fatal(err)
+		}
+
+		str := desc.(string)
+
+		if desc == uvr.DescriptionUnused {
+			log.Println("[INFO] Ignore inlet", i)
+			continue
+		}
+
+		if val, err = client.Read(in.Value); err != nil {
+			dlog.Fatal(err)
+		}
+
+		if obj, err := hkuvr.NewObject(val, str, i); err != nil {
+			dlog.Fatal(err)
 		} else {
-			dlog.Fatal(err, i)
+			objects = append(objects, obj)
 		}
 	}
 
-	return entities
+	return objects
 }
 
-func serviceForValue(value interface{}, name string) interface{} {
-	if str, ok := value.(string); ok == true {
-		if v, err := hkuvr.StringToBool(str); err == nil {
-			svc := hkuvr.NewOutlet()
-			svc.On.SetValue(v)
-			svc.Name.SetValue(name)
+// Reads the values of all in-/outlets to determine the accessory type (Outlet or Thermometer)
+func setupUVR(acc *accessory.Accessory) []hkuvr.Object {
+	var objects = collectObjects()
 
-			return svc
-		}
-	} else if v, ok := value.(float32); ok == true {
-		svc := hkuvr.NewTemperatureSensor()
-		svc.CurrentTemperature.SetValue(float64(v))
-		svc.Name.SetValue(name)
-
-		return svc
+	for _, obj := range objects {
+		acc.AddService(obj.Service())
 	}
 
-	return nil
-}
-
-// Updates the name of all entities
-func updateEntityNames(entities []*hkuvr.Entity) {
-	for _, e := range entities {
-		if outlet := e.Outlet; outlet != nil {
-			if err := hkuvr.UpdateOutletName(outlet, e.SubIndex, client); err != nil {
-				log.Fatal(err)
-			}
-		}
-
-		if err := hkuvr.UpdateTemperatureSensorName(e.TemperatureSensor, e.SubIndex, client); err != nil {
-			log.Fatal(err)
-		}
-	}
+	return objects
 }
 
 // Updates the value of all entities
-func updateEntityValues(entities []*hkuvr.Entity) {
-	for _, e := range entities {
-		if outlet := e.Outlet; outlet != nil {
-			if err := hkuvr.UpdateOutletValue(outlet, e.SubIndex, client); err != nil {
-				log.Fatal(err)
-			}
-		}
-
-		if err := hkuvr.UpdateTemperatureSensorValue(e.TemperatureSensor, e.SubIndex, client); err != nil {
+func updateObjectValues(objects []hkuvr.Object) {
+	for _, obj := range objects {
+		if err := obj.Update(client); err != nil {
 			log.Fatal(err)
 		}
 	}
