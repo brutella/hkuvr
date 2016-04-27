@@ -26,8 +26,8 @@ var bus *can.Bus
 var transport hap.Transport
 
 func main() {
-	log.Info = true
-	log.Verbose = true
+	log.Info = false
+	log.Verbose = false
 	dlog.SetFlags(dlog.LstdFlags | dlog.Lshortfile)
 
 	var err error
@@ -108,7 +108,7 @@ func collectObjects() []hkuvr.Object {
 
 		str := desc.(string)
 
-		if desc == uvr.DescriptionUnused {
+		if str == uvr.DescriptionUnused {
 			log.Println("[INFO] Ignore outlet", i)
 			continue
 		}
@@ -133,7 +133,7 @@ func collectObjects() []hkuvr.Object {
 
 		str := desc.(string)
 
-		if desc == uvr.DescriptionUnused {
+		if str == uvr.DescriptionUnused {
 			log.Println("[INFO] Ignore inlet", i)
 			continue
 		}
