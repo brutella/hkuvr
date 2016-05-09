@@ -6,11 +6,12 @@ import (
 	"github.com/brutella/log"
 	"github.com/brutella/uvr"
 
+	"github.com/brutella/hc"
 	"github.com/brutella/hc/accessory"
-	"github.com/brutella/hc/hap"
 
 	dlog "log"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -23,7 +24,7 @@ var clientID uint8 = 0x10
 var serverID uint8 = 0x1
 var client *uvr.Client
 var bus *can.Bus
-var transport hap.Transport
+var transport hc.Transport
 
 func main() {
 	log.Info = false
@@ -57,8 +58,7 @@ func main() {
 		var objects = setupUVR(bridge)
 
 		// 4.
-		var config = hap.Config{Pin: "00102003"}
-		if t, err := hap.NewIPTransport(config, bridge); err != nil {
+		if t, err := hc.NewIPTransport(hc.Config{}, bridge); err != nil {
 			log.Fatal(err)
 		} else {
 			transport = t
@@ -75,7 +75,7 @@ func main() {
 		}
 	}()
 
-	hap.OnTermination(func() {
+	hc.OnTermination(func() {
 
 		if transport != nil {
 			transport.Stop()
@@ -106,7 +106,7 @@ func collectObjects() []hkuvr.Object {
 			dlog.Fatal(err)
 		}
 
-		str := desc.(string)
+		str := strings.TrimSpace(desc.(string))
 
 		if str == uvr.DescriptionUnused {
 			log.Println("[INFO] Ignore outlet", i)
