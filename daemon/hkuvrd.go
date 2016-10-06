@@ -3,13 +3,12 @@ package main
 import (
 	"github.com/brutella/can"
 	"github.com/brutella/hkuvr"
-	"github.com/brutella/log"
 	"github.com/brutella/uvr"
 
 	"github.com/brutella/hc"
 	"github.com/brutella/hc/accessory"
 
-	dlog "log"
+	"log"
 	"os"
 	"strings"
 	"time"
@@ -27,10 +26,6 @@ var bus *can.Bus
 var transport hc.Transport
 
 func main() {
-	log.Info = false
-	log.Verbose = false
-	dlog.SetFlags(dlog.LstdFlags | dlog.Lshortfile)
-
 	var err error
 	if bus, err = can.NewBusForInterfaceWithName("can0"); err != nil {
 		log.Fatal(err)
@@ -103,22 +98,22 @@ func collectObjects() []hkuvr.Object {
 		out := uvr.NewOutlet(i)
 
 		if desc, err = client.Read(out.Description); err != nil {
-			dlog.Fatal(err)
+			log.Fatal(err)
 		}
 
 		str := strings.TrimSpace(desc.(string))
 
-		if str == uvr.DescriptionUnused {
+		if strings.HasSuffix(str, uvr.DescriptionUnused) {
 			log.Println("[INFO] Ignore outlet", i)
 			continue
 		}
 
 		if val, err = client.Read(out.State); err != nil {
-			dlog.Fatal(err)
+			log.Fatal(err)
 		}
 
 		if obj, err := hkuvr.NewObject(val, str, i); err != nil {
-			dlog.Fatal(err)
+			log.Fatal(err)
 		} else {
 			objects = append(objects, obj)
 		}
@@ -128,22 +123,22 @@ func collectObjects() []hkuvr.Object {
 		in := uvr.NewInlet(i)
 
 		if desc, err = client.Read(in.Description); err != nil {
-			dlog.Fatal(err)
+			log.Fatal(err)
 		}
 
 		str := desc.(string)
 
-		if str == uvr.DescriptionUnused {
+		if strings.HasSuffix(str, uvr.DescriptionUnused) {
 			log.Println("[INFO] Ignore inlet", i)
 			continue
 		}
 
 		if val, err = client.Read(in.Value); err != nil {
-			dlog.Fatal(err)
+			log.Fatal(err)
 		}
 
 		if obj, err := hkuvr.NewObject(val, str, i); err != nil {
-			dlog.Fatal(err)
+			log.Fatal(err)
 		} else {
 			objects = append(objects, obj)
 		}

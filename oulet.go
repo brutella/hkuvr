@@ -22,6 +22,7 @@ func NewOutlet(idx uint8) *Outlet {
 	svc.subIndex = idx
 
 	svc.Switch = service.NewSwitch()
+	svc.Switch.On.Perms = characteristic.PermsReadOnly()
 
 	svc.Name = characteristic.NewName()
 	svc.Name.SetValue("Unbenannt")
