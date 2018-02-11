@@ -73,7 +73,7 @@ func main() {
 	hc.OnTermination(func() {
 
 		if transport != nil {
-			transport.Stop()
+			<-transport.Stop()
 		}
 
 		if client != nil {
