@@ -20,7 +20,7 @@ func NewTemperatureSensor(subIndex uint8) *TemperatureSensor {
 	svc.subIndex = subIndex
 	svc.TemperatureSensor = service.NewTemperatureSensor()
 	svc.TemperatureSensor.CurrentTemperature.SetMinValue(-100)
-	svc.TemperatureSensor.CurrentTemperature.SetMaxValue(300)
+	svc.TemperatureSensor.CurrentTemperature.SetMaxValue(1500)
 
 	svc.Name = characteristic.NewName()
 	svc.Name.SetValue("Unbenannt")
