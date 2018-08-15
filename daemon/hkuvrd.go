@@ -8,6 +8,7 @@ import (
 	"github.com/brutella/hc"
 	"github.com/brutella/hc/accessory"
 
+	"flag"
 	"log"
 	"os"
 	"strings"
@@ -19,13 +20,17 @@ const (
 	MaxInletsCount  uint8 = 16
 )
 
-var clientID uint8 = 0x10
-var serverID uint8 = 0x1
 var client *uvr.Client
 var bus *can.Bus
 var transport hc.Transport
 
 func main() {
+	var (
+		clientId = flag.Int("client_id", 16, "id of the client; range from [1...254]")
+		serverId = flag.Int("server_id", 1, "id of the server to which the client connects to: range from [1...254]")
+	)
+	flag.Parse()
+
 	var err error
 	if bus, err = can.NewBusForInterfaceWithName("can0"); err != nil {
 		log.Fatal(err)
@@ -43,7 +48,7 @@ func main() {
 	// 7. Go to 5
 	go func() {
 		// 1.
-		if err := connect(); err != nil {
+		if err := connect(uint8(*clientId), uint8(*serverId)); err != nil {
 			log.Fatal(err)
 		}
 
@@ -77,7 +82,7 @@ func main() {
 		}
 
 		if client != nil {
-			client.Disconnect(serverID)
+			client.Disconnect(uint8(*serverId))
 		}
 
 		bus.Disconnect()
@@ -168,7 +173,7 @@ func updateObjectValues(objects []hkuvr.Object) {
 }
 
 // Creates a new client and connects to the CAN bus
-func connect() error {
+func connect(clientID, serverID uint8) error {
 	client = uvr.NewClient(clientID, bus)
 	return client.Connect(serverID)
 }
