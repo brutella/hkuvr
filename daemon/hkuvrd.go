@@ -7,9 +7,9 @@ import (
 
 	"github.com/brutella/hc"
 	"github.com/brutella/hc/accessory"
+	"github.com/brutella/hc/log"
 
 	"flag"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -31,9 +31,12 @@ func main() {
 	)
 	flag.Parse()
 
+	log.Info.Enable()
+	log.Debug.Enable()
+
 	var err error
 	if bus, err = can.NewBusForInterfaceWithName("can0"); err != nil {
-		log.Fatal(err)
+		log.Info.Fatal(err)
 	}
 
 	// 1. Connect to UVR
@@ -49,21 +52,23 @@ func main() {
 	go func() {
 		// 1.
 		if err := connect(uint8(*clientId), uint8(*serverId)); err != nil {
-			log.Fatal(err)
+			log.Info.Fatal(err)
 		}
 
 		var bridge *accessory.Accessory = hkuvr.NewUVR1611().Accessory
 
 		// 2.
+		log.Info.Println("Setting up…")
 		var objects = setupUVR(bridge)
 
 		// 4.
+		log.Info.Println("Creating transport…")
 		if t, err := hc.NewIPTransport(hc.Config{}, bridge); err != nil {
-			log.Fatal(err)
+			log.Info.Fatal(err)
 		} else {
 			transport = t
 		}
-
+		log.Info.Println("Starting transport…")
 		go transport.Start()
 
 		for {
@@ -103,22 +108,22 @@ func collectObjects() []hkuvr.Object {
 		out := uvr.NewOutlet(i)
 
 		if desc, err = client.Read(out.Description); err != nil {
-			log.Fatal(err)
+			log.Info.Fatal(err)
 		}
 
 		str := strings.TrimSpace(desc.(string))
 
 		if strings.HasSuffix(str, uvr.DescriptionUnused) {
-			log.Println("[INFO] Ignore outlet", i)
+			log.Info.Println("Ignore outlet", i)
 			continue
 		}
 
 		if val, err = client.Read(out.State); err != nil {
-			log.Fatal(err)
+			log.Info.Fatal(err)
 		}
 
 		if obj, err := hkuvr.NewObject(val, str, i); err != nil {
-			log.Fatal(err)
+			log.Info.Fatal(err)
 		} else {
 			objects = append(objects, obj)
 		}
@@ -128,22 +133,22 @@ func collectObjects() []hkuvr.Object {
 		in := uvr.NewInlet(i)
 
 		if desc, err = client.Read(in.Description); err != nil {
-			log.Fatal(err)
+			log.Info.Fatal(err)
 		}
 
 		str := desc.(string)
 
 		if strings.HasSuffix(str, uvr.DescriptionUnused) {
-			log.Println("[INFO] Ignore inlet", i)
+			log.Info.Println("Ignore inlet", i)
 			continue
 		}
 
 		if val, err = client.Read(in.Value); err != nil {
-			log.Fatal(err)
+			log.Info.Fatal(err)
 		}
 
 		if obj, err := hkuvr.NewObject(val, str, i); err != nil {
-			log.Fatal(err)
+			log.Info.Fatal(err)
 		} else {
 			objects = append(objects, obj)
 		}
@@ -167,7 +172,7 @@ func setupUVR(acc *accessory.Accessory) []hkuvr.Object {
 func updateObjectValues(objects []hkuvr.Object) {
 	for _, obj := range objects {
 		if err := obj.Update(client); err != nil {
-			log.Fatal(err)
+			log.Info.Fatal(err)
 		}
 	}
 }
