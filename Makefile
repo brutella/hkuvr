@@ -8,7 +8,6 @@ BINARY_NAME=hkuvrd
 
 BUILD_DIR=build
 BUILD_SRC=daemon/hkuvrd.go
-BUILD_DEST=
 
 # use arm64 once Rasbian supports 64-bits
 PACKAGE_RPI=$(BINARY_NAME)_linux_armhf
@@ -16,7 +15,7 @@ PACKAGE_MAC=$(BINARY_NAME)_darwin_amd64
 
 all: test build
 build:
-	$(GOBUILD) -o $(BUILD_DEST) -i $(BUILD_SRC)
+	$(GOBUILD) -o $(BUILD_DIR)/$(BINARY_NAME) -i $(BUILD_SRC)
 
 test:
 	$(GOTEST) -v ./...
