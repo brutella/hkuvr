@@ -28,6 +28,7 @@ func main() {
 	var (
 		clientId = flag.Int("client_id", 16, "id of the client; range from [1...254]")
 		serverId = flag.Int("server_id", 1, "id of the server to which the client connects to: range from [1...254]")
+		dataDir  = flag.String("data_dir", "data", "Path to data directory")
 	)
 	flag.Parse()
 
@@ -63,7 +64,7 @@ func main() {
 
 		// 4.
 		log.Info.Println("Creating transport…")
-		if t, err := hc.NewIPTransport(hc.Config{}, bridge); err != nil {
+		if t, err := hc.NewIPTransport(hc.Config{StoragePath: *dataDir}, bridge); err != nil {
 			log.Info.Fatal(err)
 		} else {
 			transport = t
