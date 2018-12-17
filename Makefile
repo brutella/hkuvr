@@ -6,15 +6,19 @@ GOGET=$(GOCMD) get
 
 VERSION=$(shell git describe --exact-match --tags 2>/dev/null)
 BUILD_DIR=build
-BUILD_SRC=daemon/main.go
-
 PACKAGE_RPI=hkuvr-$(VERSION)_linux_armhf
+
+unexport GOPATH
 
 test:
 	$(GOTEST) -v ./...
 
-package-rpi: build-rpi
+clean:
+	$(GOCLEAN)
+	rm -rf $(GOBUILD)
+
+package: build
 	tar -cvzf $(PACKAGE_RPI).tar.gz -C $(BUILD_DIR) $(PACKAGE_RPI)
 
-build-rpi:
-	GOOS=linux GOARCH=arm GOARM=6 $(GOBUILD) -o $(BUILD_DIR)/$(PACKAGE_RPI)/usr/bin/hkuvr -i $(BUILD_SRC)
+build:
+	GOOS=linux GOARCH=arm GOARM=6 $(GOBUILD) -o $(BUILD_DIR)/$(PACKAGE_RPI)/usr/bin/hkuvr -i cmd/hkuvr.go
