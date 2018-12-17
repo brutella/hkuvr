@@ -17,7 +17,7 @@ type Object interface {
 
 func NewObject(val interface{}, name string, idx uint8) (Object, error) {
 	if str, ok := val.(string); ok == true {
-		if v, err := stringToBool(str); err == nil {
+		if v, err := uvr.StringToBool(str); err == nil {
 			svc := NewOutlet(idx)
 			svc.On.SetValue(v)
 			svc.Name.SetValue(name)

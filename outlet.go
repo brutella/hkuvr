@@ -6,7 +6,6 @@ import (
 	"github.com/brutella/uvr"
 
 	"fmt"
-	"strings"
 )
 
 type Outlet struct {
@@ -59,17 +58,4 @@ func (svc *Outlet) Update(c *uvr.Client) error {
 	}
 
 	return nil
-}
-
-func stringToBool(str string) (bool, error) {
-	switch strings.TrimSpace(str) {
-	case uvr.OutletStateOn:
-		return true, nil
-	case uvr.OutletStateOff:
-		return false, nil
-	default:
-		break
-	}
-
-	return false, fmt.Errorf("Unknown string value %v (%X)", str, str)
 }
