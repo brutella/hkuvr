@@ -28,6 +28,7 @@ func main() {
 	var (
 		clientId = flag.Int("client_id", 16, "id of the client; range from [1...254]")
 		serverId = flag.Int("server_id", 1, "id of the server to which the client connects to: range from [1...254]")
+		interval = flag.Int("interval", 10, "update interval in seconds")
 		dataDir  = flag.String("data_dir", "data", "Path to data directory")
 	)
 	flag.Parse()
@@ -77,7 +78,7 @@ func main() {
 			updateObjectValues(objects)
 
 			// 5.
-			<-time.After(time.Second * 10)
+			<-time.After(time.Second * time.Duration(*interval))
 		}
 	}()
 
