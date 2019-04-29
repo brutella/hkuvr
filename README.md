@@ -8,9 +8,9 @@ hkuvr is a HomeKit bridge for an [UVR1611][uvr1611] device. It uses [uvr][uvr] t
 
 ## Build
 
-Build `hkuvrd.go` using `go build daemon/hkuvrd.go`. If you're building for the Reaspberry Pi you builds for ARM
+Build `hkuvr.go` using `go build cmd/hkuvrd.go`. If you're building for the Reaspberry Pi you builds for ARM
 
-     GOOS=linux GOARCH=arm GOARM=6 go build daemon/hkuvrd.go
+     GOOS=linux GOARCH=arm GOARM=6 go build cmd/hkuvr.go
 
 ## Run
 
@@ -19,7 +19,7 @@ You have to setup the interface as described in [can](https://github.com/brutell
 
 ## Pair
 
-The accessory can be paired with any HomeKit app (eg [Home3][home]) using the pin `001-02-003`.
+The accessory can be paired with any HomeKit app (eg [Home 3][home]) using the pin `001-02-003`.
 
 [home]: https://hochgatterer.me/home
 
