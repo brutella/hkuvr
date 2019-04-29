@@ -8,7 +8,7 @@ VERSION=$(shell git describe --exact-match --tags 2>/dev/null)
 BUILD_DIR=build
 PACKAGE_RPI=hkuvr-$(VERSION)_linux_armhf
 
-unexport GOPATH
+export GO111MODULE=on
 
 test:
 	$(GOTEST) -v ./...
