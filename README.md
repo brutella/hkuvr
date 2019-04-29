@@ -1,20 +1,10 @@
-# hkuvr1611
+# hkuvr
 
-This project is an implementation of a HomeKit bridge for an [UVR1611][uvr1611] device. It uses the [uvr][uvr] library to read data from the CAN bus and the [HomeControl][hc] library to communicate with HomeKit.
+hkuvr is a HomeKit bridge for an [UVR1611][uvr1611] device. It uses [uvr][uvr] to read data from the CAN bus and the [hc][hc] to communicate with HomeKit.
 
 [uvr1611]: http://www.ta.co.at/en/products/uvr1611/
 [hc]: https://github.com/brutella/hc
 [uvr]: https://github.com/brutella/uvr
-
-## Install
-
-    cd $GOPATH/src
-
-    # Clone project
-    git clone https://github.com/brutella/hkuvr && cd hkuvr
-
-    # Install dependencies
-    go get
 
 ## Build
 
@@ -29,10 +19,9 @@ You have to setup the interface as described in [can](https://github.com/brutell
 
 ## Pair
 
-The accessory can be paired with any HomeKit app like [Home][home] (which runs on iPhone, iPad and Apple Watch) using the pin `001-02-003`.
+The accessory can be paired with any HomeKit app (eg [Home3][home]) using the pin `001-02-003`.
 
-[home]: http://selfcoded.com/home
-[home-getting-started]: http://selfcoded.com/home/getting-started
+[home]: https://hochgatterer.me/home
 
 # Contact
 
